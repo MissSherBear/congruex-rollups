@@ -1,0 +1,12 @@
+public class JobAggregate {
+    Decimal committedCost = 0;
+    Integer totalWorkLogs = 0;
+
+    public void processFinance(sitetracker__Finance__c finance) {
+        // Process logic to aggregate from Finance objects to Job level
+    }
+
+    public void applyToJob(sitetracker__Job__c job) {
+        job.Committed_Cost__c = committedCost;
+    }
+}
