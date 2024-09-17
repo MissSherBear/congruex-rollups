@@ -176,12 +176,66 @@ public class RollupHandler {
     }
 
     private static void updateProjectPriceBook(Set<Id> projectPriceBookIds) {
-        // Similar logic as above for Project Price Books and related Jobs
-        // Fetch Project Price Books and related Jobs, calculate aggregates, and update
+        // Fetch Project Price Books
+        List<sitetracker__Project_Price_Book__c> projectPriceBooks = [SELECT Id FROM sitetracker__Project_Price_Book__c WHERE Id IN :projectPriceBookIds];
+
+        // Fetch related Jobs
+        List<sitetracker__Job__c> jobs = [SELECT Id, Project_Price_Book__c FROM sitetracker__Job__c WHERE Project_Price_Book__c IN :projectPriceBookIds];
+
+        // Initialize Project Price Book aggregates
+        Map<Id, ProjectPriceBookAggregate> ppbAggregates = new Map<Id, ProjectPriceBookAggregate>();
+
+        for (sitetracker__Project_Price_Book__c ppb : projectPriceBooks) {
+            ppbAggregates.put(ppb.Id, new ProjectPriceBookAggregate());
+        }
+
+        // Populate aggregates from Jobs
+        for (sitetracker__Job__c job : jobs) {
+            ProjectPriceBookAggregate agg = ppbAggregates.get(job.Project_Price_Book__c);
+            agg.processJob(job);
+        }
+
+        // Update Project Price Books
+        List<sitetracker__Project_Price_Book__c> ppbsToUpdate = new List<sitetracker__Project_Price_Book__c>();
+
+        for (sitetracker__Project_Price_Book__c ppb : projectPriceBooks) {
+            ProjectPriceBookAggregate agg = ppbAggregates.get(ppb.Id);
+            agg.applyToProjectPriceBook(ppb);
+            ppbsToUpdate.add(ppb);
+        }
+
+        update ppbsToUpdate;
     }
 
     private static void updateProgram(Set<Id> programIds) {
-        // Similar logic as above for Programs and related Project Price Books
-        // Fetch Programs and related Project Price Books, calculate aggregates, and update
+        // Fetch Programs
+        List<Program__c> programs = [SELECT Id FROM Program__c WHERE Id IN :programIds];
+
+        // Fetch related Project Price Books
+        List<sitetracker__Project_Price_Book__c> projectPriceBooks = [SELECT Id, Program__c FROM sitetracker__Project_Price_Book__c WHERE Program__c IN :programIds];
+
+        // Initialize Program aggregates
+        Map<Id, ProgramAggregate> programAggregates = new Map<Id, ProgramAggregate>();
+
+        for (Program__c program : programs) {
+            programAggregates.put(program.Id, new ProgramAggregate());
+        }
+
+        // Populate aggregates from Project Price Books
+        for (sitetracker__Project_Price_Book__c ppb : projectPriceBooks) {
+            ProgramAggregate agg = programAggregates.get(ppb.Program__c);
+            agg.processProjectPriceBook(ppb);
+        }
+
+        // Update Programs
+        List<Program__c> programsToUpdate = new List<Program__c>();
+
+        for (Program__c program : programs) {
+            ProgramAggregate agg = programAggregates.get(program.Id);
+            agg.applyToProgram(program);
+            programsToUpdate.add(program);
+        }
+
+        update programsToUpdate;
     }
 }
