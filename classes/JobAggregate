@@ -1,12 +1,41 @@
 public class JobAggregate {
+    // Fields to hold aggregation results
     Decimal committedCost = 0;
+    Decimal committedSelfCost = 0;
+    Decimal committedSubCost = 0;
+    Decimal approvedToBill = 0;
+    Decimal actualInvoiced = 0;
+    Integer approvedWorkLogs = 0;
     Integer totalWorkLogs = 0;
+    Integer unbilledWorkLogs = 0;
 
+    // Process a finance object and aggregate values
     public void processFinance(sitetracker__Finance__c finance) {
-        // Process logic to aggregate from Finance objects to Job level
+        // Sum committed costs from finance
+        committedCost += finance.Committed_Cost__c != null ? finance.Committed_Cost__c : 0;
+        committedSelfCost += finance.Committed_Self_Cost__c != null ? finance.Committed_Self_Cost__c : 0;
+        committedSubCost += finance.Committed_Sub_Cost__c != null ? finance.Committed_Sub_Cost__c : 0;
+
+        // Sum approved to bill and actual invoiced amounts
+        approvedToBill += finance.Approved_To_Bill__c != null ? finance.Approved_To_Bill__c : 0;
+        actualInvoiced += finance.Actual_Invoiced__c != null ? finance.Actual_Invoiced__c : 0;
+
+        // Count work logs and aggregate their statuses
+        approvedWorkLogs += finance.Approved_Work_Logs__c != null ? finance.Approved_Work_Logs__c : 0;
+        totalWorkLogs += finance.Total_Work_Logs__c != null ? finance.Total_Work_Logs__c : 0;
+        unbilledWorkLogs += finance.Unbilled_Work_Logs__c != null ? finance.Unbilled_Work_Logs__c : 0;
     }
 
+    // Apply the aggregated values to a job record
     public void applyToJob(sitetracker__Job__c job) {
+        // Assign the aggregated values to the corresponding fields on the job record
         job.Committed_Cost__c = committedCost;
+        job.Committed_Self_Cost__c = committedSelfCost;
+        job.Committed_Sub_Cost__c = committedSubCost;
+        job.Approved_To_Bill__c = approvedToBill;
+        job.Actual_Invoiced__c = actualInvoiced;
+        job.Approved_Work_Logs__c = approvedWorkLogs;
+        job.Total_Work_Logs__c = totalWorkLogs;
+        job.Unbilled_Work_Logs__c = unbilledWorkLogs;
     }
 }
