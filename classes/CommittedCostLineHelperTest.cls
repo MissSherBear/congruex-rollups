@@ -3,56 +3,29 @@ public class CommittedCostLineHelperTest {
     
     @testSetup
     static void setupTestData() {
-        sitetracker__Project_Template__c template = new sitetracker__Project_Template__c(
-            Name = 'Test class Project Template',
-            sitetracker__Active__c = true
-        );
+        sitetracker__Project_Template__c template = new sitetracker__Project_Template__c(Name = 'Test class Project Template', sitetracker__Active__c = true);
         insert template;
 
-        sitetracker__Site__c site = new sitetracker__Site__c(
-            Name = 'Test class Site'
-        );
+        sitetracker__Site__c site = new sitetracker__Site__c(Name = 'Test class Site');
         insert site;
 
-        sitetracker__Project__c project = new sitetracker__Project__c(
-            sitetracker__Site__c = site.Id,
-            sitetracker__ProjectTemplate__c = template.Id
-        );
+        sitetracker__Project__c project = new sitetracker__Project__c(sitetracker__Site__c = site.Id, sitetracker__ProjectTemplate__c = template.Id);
         insert project;
 
-        sitetracker__Program2__c program = new sitetracker__Program2__c(
-            Name = 'Test Program'
-        );
+        sitetracker__Program2__c program = new sitetracker__Program2__c(Name = 'Test Program');
         insert program;
 
-        Account acct = new Account(
-            Name = 'Test Account1',
-            Customer_Group__c = 'Engineer', 
-            Payment_Terms__c = 'N30',
-            OU__c = 'CNS',   
-            BillingStreet = '123 Test St',
-            BillingCity = 'Test City',
-            BillingState = 'CA',
-            BillingPostalCode = '12345',
-            BillingCountry = 'USA'
-        );
+        Account acct = new Account(Name = 'Test Account1', Customer_Group__c = 'Engineer', Payment_Terms__c = 'N30', OU__c = 'CNS', BillingStreet = '123 Test St', BillingCity = 'Test City', BillingState = 'CA', BillingPostalCode = '12345', BillingCountry = 'USA');
         insert acct;
 
-        sitetracker__Project_Price_Book__c projectPriceBook = new sitetracker__Project_Price_Book__c(
-            Name = 'Test Project Price Book',
-            Program__c = program.Id, 
-            sitetracker__Project_Template__c = template.Id,
-            sitetracker__Active__c = true,
-            dataAreaId__c = 'CNS',
-            Customer__c = acct.Id
-        );
+        sitetracker__Project_Price_Book__c projectPriceBook = new sitetracker__Project_Price_Book__c(Name = 'Test Project Price Book', Program__c = program.Id, sitetracker__Project_Template__c = template.Id, sitetracker__Active__c = true, dataAreaId__c = 'CNS', Customer__c = acct.Id);
         insert projectPriceBook;
 
         // Create a Job
         sitetracker__Job__c job = new sitetracker__Job__c(Name = 'Test Job', sitetracker__Project__c = project.Id, Project_Price_Book__c = projectPriceBook.Id, BU__c = 'CNS', Division__c = 'Interco', Client__c = acct.id);
         insert job;
         
-        // Create Budget Cost Line
+        // Create Budget Cost Lines with different Cost Categories
         Budget_Cost_Line__c budgetCostLine = new Budget_Cost_Line__c(Job__c = job.Id, Estimated_Cost__c = 1000);
         insert budgetCostLine;
         
@@ -92,18 +65,17 @@ public class CommittedCostLineHelperTest {
     static void testUpdateJobs() {
         // Query test data
         sitetracker__Job__c job = [SELECT Id FROM sitetracker__Job__c LIMIT 1];
+        Set<Id> jobIds = new Set<Id>{job.Id};
 
         // Call the method to test
         Test.startTest();
-        Map<Id, Decimal> jobCommittedCostMap = new Map<Id, Decimal>{ job.Id => 500 };
-        Map<Id, Decimal> jobActualCostMap = new Map<Id, Decimal>{ job.Id => 300 };
-        CommittedCostLineHelper.updateJobs(jobCommittedCostMap, jobActualCostMap);
+        CommittedCostLineHelper.updateJobs(jobIds);
         Test.stopTest();
         
         // Verify the Job updates
         sitetracker__Job__c updatedJob = [SELECT Total_Committed_Cost__c, Total_Actual_Cost__c, Approved_Hours__c, Payroll_Hours__c FROM sitetracker__Job__c WHERE Id = :job.Id];
-        System.assertEquals(500, updatedJob.Total_Committed_Cost__c, 'Total committed cost should be 500');
-        System.assertEquals(300, updatedJob.Total_Actual_Cost__c, 'Total actual cost should be 300');
+        System.assertEquals(800, updatedJob.Total_Committed_Cost__c, 'Total committed cost should be 800');
+        System.assertEquals(600, updatedJob.Total_Actual_Cost__c, 'Total actual cost should be 600');
         System.assertEquals(0, updatedJob.Approved_Hours__c, 'Approved hours should be 0 since no approved hours were added');
         System.assertEquals(0, updatedJob.Payroll_Hours__c, 'Payroll hours should be 0 since no payroll hours were added');
     }
