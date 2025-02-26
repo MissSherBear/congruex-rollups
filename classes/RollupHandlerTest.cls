@@ -8,27 +8,23 @@ public class RollupHandlerTest {
             Name = 'Test class Project Template',
             sitetracker__Active__c = true
         );
-
         insert template;
 
         sitetracker__Site__c site = new sitetracker__Site__c(
             Name = 'Test class Site'
         );
-
         insert site;
 
         sitetracker__Project__c project = new sitetracker__Project__c(
             sitetracker__Site__c = site.Id,
             sitetracker__ProjectTemplate__c = template.Id
         );
-
         insert project;
 
         // Create test Programs
         sitetracker__Program2__c program = new sitetracker__Program2__c(
             Name = 'Test Program'
         );
-        
         insert program;
 
         Account acct = new Account(
@@ -73,6 +69,7 @@ public class RollupHandlerTest {
         for (Integer i = 0; i < 2; i++) {
             jobs.add(new sitetracker__Job__c(
                 Name = 'Test Job ' + i, 
+                sitetracker__Project__c = project.Id,
                 Project_Price_Book__c = projectPriceBooks[i].Id,
                 BU__c = 'CNS',
                 Division__c = 'Interco',
@@ -91,11 +88,21 @@ public class RollupHandlerTest {
         }
         insert finances;
 
+        // Create test Bill Log
+        Bill_Log__c billLog = new Bill_Log__c(
+            Finance__c = finances[0].Id,
+            Bill_Date__c = Date.today(),
+            Quantity_Billed__c = 100
+        );
+        insert billLog;
+
+
         // Create test Work Logs
         List<Work_Log__c> workLogs = new List<Work_Log__c>();
         for (Integer i = 0; i < 2; i++) {
             workLogs.add(new Work_Log__c(
-                Finance__c = finances[i].Id, 
+                Finance__c = finances[i].Id,
+                Bill_Log__c = billLog.Id, 
                 Claimed_QTY__c = 100, 
                 Work_Log_Approval_Status__c = 'Approved', 
                 Work_Date__c = Date.today(),
